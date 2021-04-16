@@ -1,6 +1,7 @@
 {
     "name": "simp2/sdk",
     "description": "SDK para comunicarse con el simp2 desde un conector",
+    "version": "1.0.0",
     "require": {
         "php": ">=7.4",
         "laravel/framework": "^8.12",

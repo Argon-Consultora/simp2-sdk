@@ -1,0 +1,26 @@
+{
+    "name": "simp2/sdk",
+    "description": "SDK para comunicarse con el simp2 desde un conector",
+    "require": {
+        "php": ">=7.4",
+        "laravel/framework": "^8.12",
+        "bensampo/laravel-enum": "^3.3"
+    },
+    "authors": [
+        {
+            "name": "ArgonConsultora",
+            "homepage": "https://argonconsultora.com.ar"
+        },
+        {
+            "name": "Nicolás Migueles",
+            "email": "me@nmigueles.dev"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SIMP2\\SDK\\SIMP2ServiceProvider"
+            ]
+        }
+    }
+}

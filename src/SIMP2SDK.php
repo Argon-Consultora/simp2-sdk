@@ -10,6 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use SIMP2\SDK\DTO\Client;
 use SIMP2\SDK\DTO\Debt;
 use SIMP2\SDK\DTO\SubDebt;
 use SIMP2\SDK\Enums\HttpStatusCode;
@@ -371,5 +372,12 @@ class SIMP2SDK
         $debt->setSubdebts($subdebts);
 
         return $debt;
+    }
+
+
+    public static function getClientData(array $debts): Client
+    {
+        $debt = $debts[0];
+        return (new Client())->setClientName($debt->getClientName())->setClientId($debt->getClientId());
     }
 }

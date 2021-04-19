@@ -2,7 +2,6 @@
 
 namespace SIMP2\SDK;
 
-use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class SIMP2ServiceProvider extends BaseServiceProvider
@@ -15,17 +14,7 @@ class SIMP2ServiceProvider extends BaseServiceProvider
     public function register()
     {
         $this->mergeConfigFrom($this->configPath(), 'simp2');
-    }
-
-    /**
-     * Register the config for publishing
-     *
-     */
-    public function boot()
-    {
-        if ($this->app instanceof LaravelApplication) {
-            $this->publishes([$this->configPath() => config_path('simp2.php')], 'simp2');
-        }
+        $this->publishes([$this->configPath() => config_path('simp2.php')]);
     }
 
     protected function configPath(): string

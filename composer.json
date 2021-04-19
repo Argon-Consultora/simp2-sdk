@@ -3,7 +3,7 @@
     "description": "SDK para comunicarse con el simp2 desde un conector",
     "version": "1.0.0",
     "require": {
-        "php": ">=7.4",
+        "php": "^7.4 || ^8.0",
         "laravel/framework": "^8.12",
         "bensampo/laravel-enum": "^3.3"
     },

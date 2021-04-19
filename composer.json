@@ -28,5 +28,10 @@
                 "SIMP2\\SDK\\SIMP2ServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php artisan vendor:publish --provider=\"SIMP2\\SDK\\SIMP2ServiceProvider\""
+        ]
     }
 }

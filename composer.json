@@ -17,6 +17,11 @@
             "email": "me@nmigueles.dev"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "SIMP2\\SDK\\": "src/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [

@@ -14,7 +14,7 @@ class SIMP2ServiceProvider extends BaseServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom($this->configPath(), 'cors');
+        $this->mergeConfigFrom($this->configPath(), 'simp2');
     }
 
     /**

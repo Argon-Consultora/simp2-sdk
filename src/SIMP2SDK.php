@@ -45,16 +45,11 @@ class SIMP2SDK
 
         $endpoint = config('simp2.api_url') . $endpoint;
 
-        switch ($method) {
-            case HttpVerb::POST:
-                $response = $base->post($endpoint, $data ?? []);
-                break;
-            case HttpVerb::GET:
-                $response = $base->get($endpoint, $data);
-                break;
-            default:
-                throw new InvalidArgumentException('The http verb in makeRequest is invalid.');
-        }
+        $response = match ($method) {
+            HttpVerb::POST => $base->post($endpoint, $data ?? []),
+            HttpVerb::GET => $base->get($endpoint, $data),
+            default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
+        };
 
         $response->throw();
 
@@ -183,11 +178,9 @@ class SIMP2SDK
     }
 
     /**
-     * @param string $key
-     * @param string|array $value
      * @throws CreateMetadataException
      */
-    public static function createMetadata(string $key, $value): void
+    public static function createMetadata(string $key, string|array $value): void
     {
         try {
             self::makeRequest(SIMP2Endpoint::metadataEndpoint, 'POST', ['key' => $key, 'value' => $value]);
@@ -257,7 +250,7 @@ class SIMP2SDK
             if (is_int($overwriteLogLevel)) $overwriteLogLevel = LogLevel::fromValue($overwriteLogLevel);
             $configuredLogLevel = $overwriteLogLevel ?? new LogLevel(env('SIMP2_LOG_LEVEL', LogLevel::Debug));
             return $logLevel->value >= $configuredLogLevel->value;
-        } catch (InvalidEnumMemberException $e) {
+        } catch (InvalidEnumMemberException) {
             // Defaults to debug in case of misconfiguration.
             return $logLevel->value >= LogLevel::Debug;
         }
@@ -267,12 +260,12 @@ class SIMP2SDK
      * @param string $key
      * @return string|array|null
      */
-    public static function getMetadata(string $key)
+    public static function getMetadata(string $key): string|array|null
     {
         try {
             $res = self::makeRequest(SIMP2Endpoint::metadataEndpoint . "/" . $key, 'GET');
             return $res->object()[0]->value;
-        } catch (RequestException $e) {
+        } catch (RequestException) {
             return null;
         }
     }
@@ -283,7 +276,7 @@ class SIMP2SDK
             $res = self::makeRequest(SIMP2Endpoint::debtEndpoint . "/" . $code, 'GET');
             $debtRaw = $res->json()[0];
             return self::buildDebtFromResponse($debtRaw);
-        } catch (RequestException $e) {
+        } catch (RequestException) {
             return null;
         }
     }

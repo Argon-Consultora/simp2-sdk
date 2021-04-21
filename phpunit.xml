@@ -1,0 +1,22 @@
+<phpunit
+    bootstrap="./vendor/autoload.php">
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+        <exclude>
+            <file>./src/SIMP2ServiceProvider.php</file>
+        </exclude>
+    </coverage>
+    <php>
+        <server name="APP_ENV" value="testing"/>
+        <server name="SIMP2_API_KEY" value="aaa"/>
+        <server name="SIMP2_API_URL" value="localhost"/>
+    </php>
+</phpunit>

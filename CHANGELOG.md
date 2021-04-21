@@ -1,3 +1,3 @@
 # Changelog
 
-1.0.0 - Versión inicial - 16/04/2021
+1.2.0 - Versión inicial - 21/04/2021

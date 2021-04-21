@@ -1,7 +1,7 @@
 {
     "name": "simp2/sdk",
     "description": "SDK para comunicarse con el simp2 desde un conector",
-    "version": "1.0.0",
+    "license": "proprietary",
     "require": {
         "php": "^8.0",
         "laravel/framework": "^8.12",
@@ -47,10 +47,5 @@
         "post-autoload-dump": [
             "@php ./vendor/bin/testbench package:discover --ansi"
         ]
-    },
-    "config": {
-        "platform": {
-            "php": "8.0"
-        }
     }
 }

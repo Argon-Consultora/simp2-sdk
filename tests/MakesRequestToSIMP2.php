@@ -81,6 +81,9 @@ trait MakesRequestToSIMP2
         $debt->setCode('123');
         $debt->setClientId('11223344');
         $debt->setClientName('Elon Musk');
+        $debt->setClientFirstName('Elon');
+        $debt->setClientLastName('Musk');
+        $debt->setExtra(null);
         $subdebt = new SubDebt();
         $subdebt->setAmount(11);
         $subdebt->setUniqueReference('1');
@@ -164,6 +167,9 @@ trait MakesRequestToSIMP2
         $debt->setCode('00112233');
         $debt->setClientId('11223344');
         $debt->setClientName('Elon Musk');
+        $debt->setClientFirstName('Elon');
+        $debt->setClientLastName('Musk');
+        $debt->setExtra([]);
         $debt->setSubdebts($this->expectedSubdebts());
 
         return $debt;

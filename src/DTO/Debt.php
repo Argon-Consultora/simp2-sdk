@@ -11,7 +11,7 @@ class Debt
     private string $client_id;
     private string $client_first_name;
     private string $client_last_name;
-    private mixed $extra;
+    private mixed $extra = null;
     /**
      * @var SubDebt[]
      */
@@ -118,7 +118,7 @@ class Debt
 
     public function getExtra(): mixed
     {
-        return $this->extra;
+        return $this->extra ?? null;
     }
 
     public function setExtra(mixed $extra)

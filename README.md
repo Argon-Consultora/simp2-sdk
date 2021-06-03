@@ -3,7 +3,7 @@
 ## Instalación
 
 ```shell
-composer install simp2/sdk
+composer require simp2/sdk
 ```
 
 ## Use

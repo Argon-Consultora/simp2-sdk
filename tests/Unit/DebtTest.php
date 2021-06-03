@@ -3,11 +3,10 @@
 namespace SIMP2\Tests\Unit;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
+use SIMP2\SDK\Enums\SIMP2Endpoint;
 use SIMP2\SDK\SIMP2SDK;
 use SIMP2\Tests\SDKTestCase;
-use SIMP2\SDK\Enums\SIMP2Endpoint;
-use Illuminate\Support\Facades\Http;
-
 
 class DebtTest extends SDKTestCase
 {
@@ -19,7 +18,7 @@ class DebtTest extends SDKTestCase
             Http::fake([self::getApiUrl(SIMP2Endpoint::debtEndpoint . '/123') => Http::response([], 404, self::headers())]);
             $response = SIMP2SDK::getDebtInfo('123');
             $this->assertNull($response);
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }

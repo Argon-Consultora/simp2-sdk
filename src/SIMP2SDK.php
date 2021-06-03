@@ -29,34 +29,6 @@ use SIMP2\SDK\Exceptions\SIMP2Exception;
 class SIMP2SDK
 {
     /**
-     * @param string $endpoint
-     * @param string $method
-     * @param array|null $data
-     * @return Response
-     * @throws RequestException
-     */
-    protected static function makeRequest(string $endpoint, string $method, ?array $data = null): Response
-    {
-        $base = Http::withHeaders([
-            'X-API-KEY' => config('simp2.api_key'),
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-
-        $endpoint = config('simp2.api_url') . $endpoint;
-
-        $response = match ($method) {
-            HttpVerb::POST => $base->post($endpoint, $data ?? []),
-            HttpVerb::GET => $base->get($endpoint, $data),
-            default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
-        };
-
-        $response->throw();
-
-        return $response;
-    }
-
-    /**
      * Notifies the payment
      * @param string $unique_reference
      * @throws SavePaymentException
@@ -87,6 +59,117 @@ class SIMP2SDK
 
             throw new SavePaymentException($e->getMessage());
         }
+    }
+
+    /**
+     * @param string          $unique_reference
+     * @param string          $observations
+     * @param string|null     $category
+     * @param TypeDescription $type_description
+     * @param LogLevel        $logLevel
+     * @param int|null        $overwriteLogLevel
+     */
+    public static function infoEvent(
+        string $unique_reference,
+        string $observations,
+        ?string $category,
+        TypeDescription $type_description,
+        LogLevel $logLevel,
+        int $overwriteLogLevel = null
+    ) {
+        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
+        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
+    }
+
+    protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
+    {
+        try {
+            if (env('APP_ENV') === 'testing' && !$overwriteLogLevel) return false;
+            if (is_int($overwriteLogLevel)) $overwriteLogLevel = LogLevel::fromValue($overwriteLogLevel);
+            $configuredLogLevel = $overwriteLogLevel ?? new LogLevel(env('SIMP2_LOG_LEVEL', LogLevel::Debug));
+            return $logLevel->value >= $configuredLogLevel->value;
+        } catch (InvalidEnumMemberException) {
+            // Defaults to debug in case of misconfiguration.
+            return $logLevel->value >= LogLevel::Debug;
+        }
+    }
+
+    /**
+     * @param string          $unique_reference
+     * @param string          $observations
+     * @param string|null     $category
+     * @param TypeDescription $type_description
+     * @param SIMP2Endpoint   $endpoint
+     */
+    private static function fireEvent(
+        string $unique_reference,
+        string $observations,
+        ?string $category,
+        TypeDescription $type_description,
+        SIMP2Endpoint $endpoint
+    ) {
+        $body = [
+            "unique_reference" => $unique_reference,
+            "integration" => "conector_pagofacil",
+            "type_description" => $type_description,
+            "event_date" => Carbon::now()->toDateTimeString(),
+            "category" => $category,
+            "observations" => $observations
+        ];
+
+        try {
+            self::makeRequest((string)$endpoint, 'POST', $body);
+        } catch (RequestException $e) {
+            Log::critical('No se pudo procesar un evento.', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @param string     $endpoint
+     * @param string     $method
+     * @param array|null $data
+     * @return Response
+     * @throws RequestException
+     */
+    protected static function makeRequest(string $endpoint, string $method, ?array $data = null): Response
+    {
+        $base = Http::withHeaders([
+            'X-API-KEY' => config('simp2.api_key'),
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ]);
+
+        $endpoint = config('simp2.api_url') . $endpoint;
+
+        $response = match ($method) {
+            HttpVerb::POST => $base->post($endpoint, $data ?? []),
+            HttpVerb::GET => $base->get($endpoint, $data),
+            default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
+        };
+
+        $response->throw();
+
+        return $response;
+    }
+
+    /**
+     * @param string          $unique_reference
+     * @param string          $observations
+     * @param string|null     $category
+     * @param TypeDescription $type_description
+     * @param LogLevel        $logLevel
+     * @param int|null        $overwriteLogLevel
+     */
+    public static function errorEvent(
+        string $unique_reference,
+        string $observations,
+        ?string $category,
+        TypeDescription $type_description,
+        LogLevel $logLevel,
+        int $overwriteLogLevel = null
+    ) {
+        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
+        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
     }
 
     /**
@@ -191,72 +274,6 @@ class SIMP2SDK
     }
 
     /**
-     * @param string $unique_reference
-     * @param string $observations
-     * @param string|null $category
-     * @param TypeDescription $type_description
-     * @param LogLevel $logLevel
-     * @param int|null $overwriteLogLevel
-     */
-    public static function infoEvent(string $unique_reference, string $observations, ?string $category, TypeDescription $type_description, LogLevel $logLevel, int $overwriteLogLevel = null)
-    {
-        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
-    }
-
-    /**
-     * @param string $unique_reference
-     * @param string $observations
-     * @param string|null $category
-     * @param TypeDescription $type_description
-     * @param LogLevel $logLevel
-     * @param int|null $overwriteLogLevel
-     */
-    public static function errorEvent(string $unique_reference, string $observations, ?string $category, TypeDescription $type_description, LogLevel $logLevel, int $overwriteLogLevel = null)
-    {
-        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
-    }
-
-    /**
-     * @param string $unique_reference
-     * @param string $observations
-     * @param string|null $category
-     * @param TypeDescription $type_description
-     * @param SIMP2Endpoint $endpoint
-     */
-    private static function fireEvent(string $unique_reference, string $observations, ?string $category, TypeDescription $type_description, SIMP2Endpoint $endpoint)
-    {
-        $body = [
-            "unique_reference" => $unique_reference,
-            "integration" => "conector_pagofacil",
-            "type_description" => $type_description,
-            "event_date" => Carbon::now()->toDateTimeString(),
-            "category" => $category,
-            "observations" => $observations
-        ];
-
-        try {
-            self::makeRequest((string)$endpoint, 'POST', $body);
-        } catch (RequestException $e) {
-            Log::critical('No se pudo procesar un evento.', ['error' => $e->getMessage()]);
-        }
-    }
-
-    protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
-    {
-        try {
-            if (env('APP_ENV') === 'testing' && !$overwriteLogLevel) return false;
-            if (is_int($overwriteLogLevel)) $overwriteLogLevel = LogLevel::fromValue($overwriteLogLevel);
-            $configuredLogLevel = $overwriteLogLevel ?? new LogLevel(env('SIMP2_LOG_LEVEL', LogLevel::Debug));
-            return $logLevel->value >= $configuredLogLevel->value;
-        } catch (InvalidEnumMemberException) {
-            // Defaults to debug in case of misconfiguration.
-            return $logLevel->value >= LogLevel::Debug;
-        }
-    }
-
-    /**
      * @param string $key
      * @return string|array|null
      */
@@ -279,6 +296,31 @@ class SIMP2SDK
         } catch (RequestException) {
             return null;
         }
+    }
+
+    private static function buildDebtFromResponse(array $response): Debt
+    {
+        $debt = new Debt();
+        $debt->setCode($response['code']);
+        $debt->setClientId($response['ccf_client_id']);
+        $debt->setClientName($response['ccf_client_data']['first_name'] . " " . $response['ccf_client_data']['last_name']);
+        $debt->setClientFirstName($response['ccf_client_data']['first_name']);
+        $debt->setClientLastName($response['ccf_client_data']['last_name']);
+        $debt->setExtra($response['ccf_client_data']['extra'] ?? null);
+        $subdebts = array_map(function ($rawSubDebt) {
+            $subdebt = new SubDebt();
+            $subdebt->setAmount($rawSubDebt['amount']);
+            $subdebt->setUniqueReference($rawSubDebt['unique_reference']);
+            $subdebt->setDueDate($rawSubDebt['due_date']);
+            $subdebt->setTexts($rawSubDebt['texts'][0]);
+            $subdebt->setBarCode($rawSubDebt['barcode']);
+            $subdebt->setExpired($rawSubDebt['expired']);
+            $subdebt->setStatus($rawSubDebt['status']);
+            return $subdebt;
+        }, $response['subdebts']);
+        $debt->setSubdebts($subdebts);
+
+        return $debt;
     }
 
     /**
@@ -345,35 +387,16 @@ class SIMP2SDK
         }
     }
 
-    private static function buildDebtFromResponse(array $response): Debt
-    {
-        $debt = new Debt();
-        $debt->setCode($response['code']);
-        $debt->setClientId($response['ccf_client_id']);
-        $debt->setClientName($response['ccf_client_data']['first_name'] . " " . $response['ccf_client_data']['last_name']);
-        $debt->setClientFirstName($response['ccf_client_data']['first_name']);
-        $debt->setClientLastName($response['ccf_client_data']['last_name']);
-        $debt->setExtra($response['ccf_client_data']['extra'] ?? null);
-        $subdebts = array_map(function ($rawSubDebt) {
-            $subdebt = new SubDebt();
-            $subdebt->setAmount($rawSubDebt['amount']);
-            $subdebt->setUniqueReference($rawSubDebt['unique_reference']);
-            $subdebt->setDueDate($rawSubDebt['due_date']);
-            $subdebt->setTexts($rawSubDebt['texts'][0]);
-            $subdebt->setBarCode($rawSubDebt['barcode']);
-            $subdebt->setExpired($rawSubDebt['expired']);
-            $subdebt->setStatus($rawSubDebt['status']);
-            return $subdebt;
-        }, $response['subdebts']);
-        $debt->setSubdebts($subdebts);
-
-        return $debt;
-    }
-
-
+    /**
+     * @param Debt[] $debts
+     * @return Client
+     */
     public static function getClientData(array $debts): Client
     {
         $debt = $debts[0];
-        return (new Client())->setClientName($debt->getClientName())->setClientId($debt->getClientId());
+        return (new Client())
+            ->setClientName($debt->getClientFirstName(), $debt->getClientLastName())
+            ->setClientId($debt->getClientId())
+            ->setExtra($debt->getExtra());
     }
 }

@@ -351,6 +351,9 @@ class SIMP2SDK
         $debt->setCode($response['code']);
         $debt->setClientId($response['ccf_client_id']);
         $debt->setClientName($response['ccf_client_data']['first_name'] . " " . $response['ccf_client_data']['last_name']);
+        $debt->setClientFirstName($response['ccf_client_data']['first_name']);
+        $debt->setClientLastName($response['ccf_client_data']['last_name']);
+        $debt->setExtra($response['ccf_client_data']['extra']);
         $subdebts = array_map(function ($rawSubDebt) {
             $subdebt = new SubDebt();
             $subdebt->setAmount($rawSubDebt['amount']);

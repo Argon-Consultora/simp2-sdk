@@ -4,7 +4,6 @@ namespace SIMP2\SDK;
 
 use BenSampo\Enum\Exceptions\InvalidEnumMemberException;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -327,6 +326,7 @@ class SIMP2SDK
      * @param string $ccf_client_id
      * @return Debt[]
      * @throws ClientNotFound
+     * @throws SIMP2Exception
      */
     public static function getDebtsOfClient(string $ccf_client_id): array
     {
@@ -337,8 +337,11 @@ class SIMP2SDK
             return array_map(function ($rawDebt) {
                 return self::buildDebtFromResponse($rawDebt);
             }, $res->json());
-        } catch (Exception $e) {
-            throw new ClientNotFound($e->getMessage());
+        } catch (RequestException $e) {
+            if ($e->response->status() == HttpStatusCode::NotFound) {
+                return throw new ClientNotFound($e->getMessage());
+            }
+            return throw new SIMP2Exception($e->getMessage());
         }
     }
 
@@ -348,8 +351,10 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception
      */
-    public static function getSubdebt(string $unique_reference): Debt
-    {
+    public
+    static function getSubdebt(
+        string $unique_reference
+    ): Debt {
         try {
             $res = self::makeRequest(SIMP2Endpoint::debtUniqueEndpoint . $unique_reference, 'GET');
             return self::buildDebtFromResponse($res->json()[0]);
@@ -371,8 +376,10 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception
      */
-    public static function getSubdebtByBarcode(string $barcode): Debt
-    {
+    public
+    static function getSubdebtByBarcode(
+        string $barcode
+    ): Debt {
         try {
             $res = self::makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
             return self::buildDebtFromResponse($res->json()[0]);
@@ -391,8 +398,10 @@ class SIMP2SDK
      * @param Debt[] $debts
      * @return Client
      */
-    public static function getClientData(array $debts): Client
-    {
+    public
+    static function getClientData(
+        array $debts
+    ): Client {
         $debt = $debts[0];
         return (new Client())
             ->setClientName($debt->getClientFirstName(), $debt->getClientLastName())

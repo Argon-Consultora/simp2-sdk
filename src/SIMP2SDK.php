@@ -27,57 +27,33 @@ use SIMP2\SDK\Exceptions\SIMP2Exception;
 
 class SIMP2SDK
 {
+
     /**
-     * Notifies the payment
-     * @param string $unique_reference
-     * @throws SavePaymentException
-     * @throws PaymentNotFoundException
-     * @throws PaymentAlreadyNotifiedException
+     * @param string     $endpoint
+     * @param string     $method
+     * @param array|null $data
+     * @return Response
+     * @throws RequestException
      */
-    public static function notifyPayment(string $unique_reference): void
+    protected static function makeRequest(string $endpoint, string $method, ?array $data = null): Response
     {
-        try {
-            self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
+        $base = Http::withHeaders([
+            'X-API-KEY' => config('simp2.api_key'),
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ]);
 
-            $body = [
-                'unique_reference' => $unique_reference,
-                'date' => Carbon::now()->toDateTimeString()
-            ];
-            self::makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
-        } catch (RequestException $e) {
-            self::errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
-            if ($e->response->status() == HttpStatusCode::NotFound) {
-                throw new PaymentNotFoundException();
-            }
-            if ($e->response->status() == HttpStatusCode::Conflict) {
-                throw new PaymentAlreadyNotifiedException();
-            }
-            if ($e->response->status() == HttpStatusCode::UnprocessableEntity) {
-                throw new SavePaymentException('Invalid request body');
-            }
+        $endpoint = config('simp2.api_url') . $endpoint;
 
-            throw new SavePaymentException($e->getMessage());
-        }
-    }
+        $response = match ($method) {
+            HttpVerb::GET => $base->get($endpoint, $data),
+            HttpVerb::POST => $base->post($endpoint, $data ?? []),
+            default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
+        };
 
-    /**
-     * @param string          $unique_reference
-     * @param string          $observations
-     * @param string|null     $category
-     * @param TypeDescription $type_description
-     * @param LogLevel        $logLevel
-     * @param int|null        $overwriteLogLevel
-     */
-    public static function infoEvent(
-        string $unique_reference,
-        string $observations,
-        ?string $category,
-        TypeDescription $type_description,
-        LogLevel $logLevel,
-        int $overwriteLogLevel = null
-    ) {
-        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
+        $response->throw();
+
+        return $response;
     }
 
     protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
@@ -93,13 +69,6 @@ class SIMP2SDK
         }
     }
 
-    /**
-     * @param string          $unique_reference
-     * @param string          $observations
-     * @param string|null     $category
-     * @param TypeDescription $type_description
-     * @param SIMP2Endpoint   $endpoint
-     */
     private static function fireEvent(
         string $unique_reference,
         string $observations,
@@ -123,42 +92,18 @@ class SIMP2SDK
         }
     }
 
-    /**
-     * @param string     $endpoint
-     * @param string     $method
-     * @param array|null $data
-     * @return Response
-     * @throws RequestException
-     */
-    protected static function makeRequest(string $endpoint, string $method, ?array $data = null): Response
-    {
-        $base = Http::withHeaders([
-            'X-API-KEY' => config('simp2.api_key'),
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-
-        $endpoint = config('simp2.api_url') . $endpoint;
-
-        $response = match ($method) {
-            HttpVerb::POST => $base->post($endpoint, $data ?? []),
-            HttpVerb::GET => $base->get($endpoint, $data),
-            default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
-        };
-
-        $response->throw();
-
-        return $response;
+    public static function infoEvent(
+        string $unique_reference,
+        string $observations,
+        ?string $category,
+        TypeDescription $type_description,
+        LogLevel $logLevel,
+        int $overwriteLogLevel = null
+    ) {
+        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
+        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
     }
 
-    /**
-     * @param string          $unique_reference
-     * @param string          $observations
-     * @param string|null     $category
-     * @param TypeDescription $type_description
-     * @param LogLevel        $logLevel
-     * @param int|null        $overwriteLogLevel
-     */
     public static function errorEvent(
         string $unique_reference,
         string $observations,
@@ -172,24 +117,57 @@ class SIMP2SDK
     }
 
     /**
-     * Confirms the payment
-     * @param string $unique_reference
-     * @return Response // Just for testing
-     * @throws SavePaymentException
      * @throws PaymentNotFoundException
+     * @throws SavePaymentException
+     * @throws PaymentAlreadyNotifiedException
      */
-    public static function confirmPayment(string $unique_reference): Response
+    public static function notifyPayment(string $unique_reference, string $date = null): void
+    {
+        try {
+            self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
+
+            $body = [
+                'unique_reference' => $unique_reference,
+                'date' => $date ?? Carbon::now()->toDateTimeString()
+            ];
+            self::makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
+        } catch (RequestException $e) {
+            self::errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
+            if ($e->response->status() == HttpStatusCode::NotFound) {
+                throw new PaymentNotFoundException();
+            }
+            if ($e->response->status() == HttpStatusCode::Conflict) {
+                throw new PaymentAlreadyNotifiedException();
+            }
+            if ($e->response->status() == HttpStatusCode::UnprocessableEntity) {
+                throw new SavePaymentException('Invalid request body');
+            }
+
+            throw new SavePaymentException($e->getMessage());
+        }
+    }
+
+    /**
+     * Confirms the payment
+     * @param string      $unique_reference
+     * @param string|null $date
+     * @return Response // Just for testing
+     * @throws PaymentNotFoundException
+     * @throws SavePaymentException
+     */
+    public static function confirmPayment(string $unique_reference, string $date = null): Response
     {
         try {
             self::infoEvent($unique_reference, 'Se confirmó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
 
             $body = [
                 'unique_reference' => $unique_reference,
-                'date' => Carbon::now()->toDateTimeString()
+                'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
             return self::makeRequest(SIMP2Endpoint::confirmPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
             self::errorEvent($unique_reference, 'No se pudo confirmar el pago al SIMP2', TypeDescription::SavePaymentError, TypeDescription::SavePaymentError(), LogLevel::Error());
+
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -202,24 +180,25 @@ class SIMP2SDK
     }
 
     /**
-     * @param string $unique_reference
+     * @param string      $unique_reference
+     * @param string|null $date
      * @return Response // Just for testing
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
-    public static function notifyRollbackPayment(string $unique_reference): Response
+    public static function notifyRollbackPayment(string $unique_reference, string $date = null): Response
     {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
-                'date' => Carbon::now()->toDateTimeString()
+                'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
 
             self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
             return self::makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
             self::errorEvent($unique_reference, 'No se pudo notificar la reversa al SIMP2', null, TypeDescription::RollbackError(), LogLevel::Critical());
-            // Pass the payment data to the error constructor to be persisted.
+
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -231,18 +210,19 @@ class SIMP2SDK
     }
 
     /**
-     * @param string $unique_reference
+     * @param string      $unique_reference
+     * @param string|null $date
      * @return Response // Just for testing
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
-    public static function confirmRollbackPayment(string $unique_reference): Response
+    public static function confirmRollbackPayment(string $unique_reference, string $date = null): Response
     {
         try {
             self::infoEvent($unique_reference, 'Se confirmo una reversa', null, TypeDescription::RollbackConfirmation(), LogLevel::Info());
             $body = [
                 'unique_reference' => $unique_reference,
-                'date' => Carbon::now()->toDateTimeString()
+                'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
 
             return self::makeRequest(SIMP2Endpoint::confirmRollbackEndpoint, 'POST', $body);
@@ -297,6 +277,71 @@ class SIMP2SDK
         }
     }
 
+    /**
+     * @param string $ccf_client_id
+     * @return Debt[]
+     * @throws ClientNotFound
+     * @throws SIMP2Exception
+     */
+    public static function getDebtsOfClient(string $ccf_client_id): array
+    {
+        try {
+            $res = self::makeRequest(SIMP2Endpoint::clientDataEndpoint($ccf_client_id), 'GET');
+            // Response to DTO
+            return array_map(function ($rawDebt) {
+                return self::buildDebtFromResponse($rawDebt);
+            }, $res->json());
+        } catch (RequestException $e) {
+            if ($e->response->status() == HttpStatusCode::NotFound) {
+                return throw new ClientNotFound($e->getMessage());
+            }
+            return throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param string $unique_reference
+     * @return Debt
+     * @throws PaymentNotFoundException
+     * @throws SIMP2Exception
+     */
+    public static function getSubdebt(string $unique_reference): Debt
+    {
+        try {
+            $res = self::makeRequest(SIMP2Endpoint::debtUniqueEndpoint . $unique_reference, 'GET');
+            return self::buildDebtFromResponse($res->json()[0]);
+        } catch (RequestException $e) {
+            if ($e->response->status() == HttpStatusCode::NotFound) {
+                self::errorEvent($unique_reference, 'Se busco una deuda inexistente', null, TypeDescription::DebtError(), LogLevel::Debug());
+                throw new PaymentNotFoundException();
+            }
+
+            self::errorEvent($unique_reference, 'No se pudo obtener la sub deuda del simp2', null, TypeDescription::DebtError(), LogLevel::Info());
+            throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param string $barcode
+     * @return Debt
+     * @throws PaymentNotFoundException
+     * @throws SIMP2Exception
+     */
+    public static function getSubdebtByBarcode(string $barcode): Debt
+    {
+        try {
+            $res = self::makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
+            return self::buildDebtFromResponse($res->json()[0]);
+        } catch (RequestException $e) {
+            if (
+                $e->response->status() == HttpStatusCode::NotFound ||
+                $e->response->status() == HttpStatusCode::Conflict) {
+                throw new PaymentNotFoundException();
+            }
+            throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
     private static function buildDebtFromResponse(array $response): Debt
     {
         $debt = new Debt();
@@ -323,85 +368,11 @@ class SIMP2SDK
     }
 
     /**
-     * @param string $ccf_client_id
-     * @return Debt[]
-     * @throws ClientNotFound
-     * @throws SIMP2Exception
-     */
-    public static function getDebtsOfClient(string $ccf_client_id): array
-    {
-        try {
-            $res = self::makeRequest(SIMP2Endpoint::clientDataEndpoint($ccf_client_id), 'GET');
-
-            // Response to DTO
-            return array_map(function ($rawDebt) {
-                return self::buildDebtFromResponse($rawDebt);
-            }, $res->json());
-        } catch (RequestException $e) {
-            if ($e->response->status() == HttpStatusCode::NotFound) {
-                return throw new ClientNotFound($e->getMessage());
-            }
-            return throw new SIMP2Exception($e->getMessage());
-        }
-    }
-
-    /**
-     * @param string $unique_reference
-     * @return Debt
-     * @throws PaymentNotFoundException
-     * @throws SIMP2Exception
-     */
-    public
-    static function getSubdebt(
-        string $unique_reference
-    ): Debt {
-        try {
-            $res = self::makeRequest(SIMP2Endpoint::debtUniqueEndpoint . $unique_reference, 'GET');
-            return self::buildDebtFromResponse($res->json()[0]);
-
-        } catch (RequestException $e) {
-            if ($e->response->status() == HttpStatusCode::NotFound) {
-                self::errorEvent($unique_reference, 'Se busco una deuda inexistente', null, TypeDescription::DebtError(), LogLevel::Debug());
-                throw new PaymentNotFoundException();
-            }
-
-            self::errorEvent($unique_reference, 'No se pudo obtener la sub deuda del simp2', null, TypeDescription::DebtError(), LogLevel::Info());
-            throw new SIMP2Exception($e->getMessage());
-        }
-    }
-
-    /**
-     * @param string $barcode
-     * @return Debt
-     * @throws PaymentNotFoundException
-     * @throws SIMP2Exception
-     */
-    public
-    static function getSubdebtByBarcode(
-        string $barcode
-    ): Debt {
-        try {
-            $res = self::makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
-            return self::buildDebtFromResponse($res->json()[0]);
-
-        } catch (RequestException $e) {
-            if (
-                $e->response->status() == HttpStatusCode::NotFound ||
-                $e->response->status() == HttpStatusCode::Conflict) {
-                throw new PaymentNotFoundException();
-            }
-            throw new SIMP2Exception($e->getMessage());
-        }
-    }
-
-    /**
      * @param Debt[] $debts
      * @return Client
      */
-    public
-    static function getClientData(
-        array $debts
-    ): Client {
+    public static function getClientData(array $debts): Client
+    {
         $debt = $debts[0];
         return (new Client())
             ->setClientName($debt->getClientFirstName(), $debt->getClientLastName())

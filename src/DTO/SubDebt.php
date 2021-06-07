@@ -29,7 +29,6 @@ class SubDebt
         return $this->unique_reference;
     }
 
-
     public function setUniqueReference(string $unique_reference): void
     {
         $this->unique_reference = $unique_reference;
@@ -88,5 +87,20 @@ class SubDebt
     public function isNotPaid(): bool
     {
         return $this->status == DebtStatus::PendingPayment;
+    }
+
+    /**
+     * Returns if the subdebt has been rolled back.
+     * @return bool
+     */
+    public function hasBeenRolledBack(): bool
+    {
+        return $this->status == DebtStatus::RollbackNotified
+            || $this->status == DebtStatus::RollbackConfirmed;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 }

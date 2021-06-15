@@ -15,7 +15,9 @@ Por ejemplo:
 ```php
 use SIMP2\SDK\SIMP2SDK;
 
-$debts = SIMP2SDK::getDebtsOfClient($client_identifier);
+$sdk = new SIMP2SDK();
+$sdk->setCompanyTransactionToken($cct);
+$debts = $sdk->getDebtsOfClient($client_identifier);
 ```
 
 ## Methods

@@ -27,21 +27,26 @@ use SIMP2\SDK\Exceptions\SIMP2Exception;
 
 class SIMP2SDK
 {
+    private ?string $companyTransactionToken = null;
 
     /**
-     * @param string     $endpoint
-     * @param string     $method
-     * @param array|null $data
-     * @return Response
      * @throws RequestException
      */
-    protected static function makeRequest(string $endpoint, string $method, ?array $data = null): Response
-    {
-        $base = Http::withHeaders([
+    protected function makeRequest(
+        string $endpoint,
+        string $method,
+        ?array $data = null
+    ): Response {
+        $headers = [
             'X-API-KEY' => config('simp2.api_key'),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ]);
+        ];
+        if ($this->companyTransactionToken) {
+            $headers['company-transaction-token'] = $this->companyTransactionToken;
+        }
+
+        $base = Http::withHeaders($headers);
 
         $endpoint = config('simp2.api_url') . $endpoint;
 
@@ -54,6 +59,11 @@ class SIMP2SDK
         $response->throw();
 
         return $response;
+    }
+
+    public function setCompanyTransactionToken(string $cct)
+    {
+        $this->companyTransactionToken = $cct;
     }
 
     protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
@@ -86,7 +96,7 @@ class SIMP2SDK
         ];
 
         try {
-            self::makeRequest((string)$endpoint, 'POST', $body);
+            (new SIMP2SDK)->makeRequest((string)$endpoint, 'POST', $body);
         } catch (RequestException $e) {
             Log::critical('No se pudo procesar un evento.', ['error' => $e->getMessage()]);
         }
@@ -121,7 +131,7 @@ class SIMP2SDK
      * @throws SavePaymentException
      * @throws PaymentAlreadyNotifiedException
      */
-    public static function notifyPayment(string $unique_reference, string $date = null): void
+    public function notifyPayment(string $unique_reference, string $date = null): void
     {
         try {
             self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
@@ -130,9 +140,9 @@ class SIMP2SDK
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
-            self::makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
+            $this->makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            self::errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
+            $this->errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -155,7 +165,7 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws SavePaymentException
      */
-    public static function confirmPayment(string $unique_reference, string $date = null): Response
+    public function confirmPayment(string $unique_reference, string $date = null): Response
     {
         try {
             self::infoEvent($unique_reference, 'Se confirmó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
@@ -164,9 +174,9 @@ class SIMP2SDK
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
-            return self::makeRequest(SIMP2Endpoint::confirmPaymentEndpoint, 'POST', $body);
+            return $this->makeRequest(SIMP2Endpoint::confirmPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            self::errorEvent($unique_reference, 'No se pudo confirmar el pago al SIMP2', TypeDescription::SavePaymentError, TypeDescription::SavePaymentError(), LogLevel::Error());
+            $this->errorEvent($unique_reference, 'No se pudo confirmar el pago al SIMP2', TypeDescription::SavePaymentError, TypeDescription::SavePaymentError(), LogLevel::Error());
 
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
@@ -186,7 +196,7 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
-    public static function notifyRollbackPayment(string $unique_reference, string $date = null): Response
+    public function notifyRollbackPayment(string $unique_reference, string $date = null): Response
     {
         try {
             $body = [
@@ -195,9 +205,9 @@ class SIMP2SDK
             ];
 
             self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
-            return self::makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);
+            return $this->makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            self::errorEvent($unique_reference, 'No se pudo notificar la reversa al SIMP2', null, TypeDescription::RollbackError(), LogLevel::Critical());
+            $this->errorEvent($unique_reference, 'No se pudo notificar la reversa al SIMP2', null, TypeDescription::RollbackError(), LogLevel::Critical());
 
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
@@ -216,7 +226,7 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
-    public static function confirmRollbackPayment(string $unique_reference, string $date = null): Response
+    public function confirmRollbackPayment(string $unique_reference, string $date = null): Response
     {
         try {
             self::infoEvent($unique_reference, 'Se confirmo una reversa', null, TypeDescription::RollbackConfirmation(), LogLevel::Info());
@@ -225,9 +235,9 @@ class SIMP2SDK
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
 
-            return self::makeRequest(SIMP2Endpoint::confirmRollbackEndpoint, 'POST', $body);
+            return $this->makeRequest(SIMP2Endpoint::confirmRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            self::errorEvent($unique_reference, 'No se pudo confirmar la reversa al SIMP2', "confirm_rollback_error", TypeDescription::RollbackError(), LogLevel::Critical());
+            $this->errorEvent($unique_reference, 'No se pudo confirmar la reversa al SIMP2', "confirm_rollback_error", TypeDescription::RollbackError(), LogLevel::Critical());
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -242,10 +252,10 @@ class SIMP2SDK
     /**
      * @throws CreateMetadataException
      */
-    public static function createMetadata(string $key, string|array $value): void
+    public function createMetadata(string $key, string|array $value): void
     {
         try {
-            self::makeRequest(SIMP2Endpoint::metadataEndpoint, 'POST', ['key' => $key, 'value' => $value]);
+            $this->makeRequest(SIMP2Endpoint::metadataEndpoint, 'POST', ['key' => $key, 'value' => $value]);
         } catch (RequestException $e) {
             Log::alert('No se pudo guardar la metadata', ['message' => $e->getMessage(), 'key' => $key, 'value' => $value]);
             throw new CreateMetadataException($e->getMessage());
@@ -256,20 +266,20 @@ class SIMP2SDK
      * @param string $key
      * @return string|array|null
      */
-    public static function getMetadata(string $key): string|array|null
+    public function getMetadata(string $key): string|array|null
     {
         try {
-            $res = self::makeRequest(SIMP2Endpoint::metadataEndpoint . "/" . $key, 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::metadataEndpoint . "/" . $key, 'GET');
             return $res->object()[0]->value;
         } catch (RequestException) {
             return null;
         }
     }
 
-    public static function getDebtInfo($code): ?Debt
+    public function getDebtInfo($code): ?Debt
     {
         try {
-            $res = self::makeRequest(SIMP2Endpoint::debtEndpoint . "/" . $code, 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::debtEndpoint . "/" . $code, 'GET');
             $debtRaw = $res->json()[0];
             return self::buildDebtFromResponse($debtRaw);
         } catch (RequestException) {
@@ -283,13 +293,13 @@ class SIMP2SDK
      * @throws ClientNotFound
      * @throws SIMP2Exception
      */
-    public static function getDebtsOfClient(string $ccf_client_id): array
+    public function getDebtsOfClient(string $ccf_client_id): array
     {
         try {
-            $res = self::makeRequest(SIMP2Endpoint::clientDataEndpoint($ccf_client_id), 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::clientDataEndpoint($ccf_client_id), 'GET');
             // Response to DTO
             return array_map(function ($rawDebt) {
-                return self::buildDebtFromResponse($rawDebt);
+                return $this->buildDebtFromResponse($rawDebt);
             }, $res->json());
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
@@ -305,10 +315,10 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception
      */
-    public static function getSubdebt(string $unique_reference): Debt
+    public function getSubdebt(string $unique_reference): Debt
     {
         try {
-            $res = self::makeRequest(SIMP2Endpoint::debtUniqueEndpoint . $unique_reference, 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::debtUniqueEndpoint . $unique_reference, 'GET');
             return self::buildDebtFromResponse($res->json()[0]);
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
@@ -327,11 +337,11 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception
      */
-    public static function getSubdebtByBarcode(string $barcode): Debt
+    public function getSubdebtByBarcode(string $barcode): Debt
     {
         try {
-            $res = self::makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
-            return self::buildDebtFromResponse($res->json()[0]);
+            $res = $this->makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
+            return $this->buildDebtFromResponse($res->json()[0]);
         } catch (RequestException $e) {
             if (
                 $e->response->status() == HttpStatusCode::NotFound ||
@@ -371,7 +381,7 @@ class SIMP2SDK
      * @param Debt[] $debts
      * @return Client
      */
-    public static function getClientData(array $debts): Client
+    public function getClientData(array $debts): Client
     {
         $debt = $debts[0];
         return (new Client())

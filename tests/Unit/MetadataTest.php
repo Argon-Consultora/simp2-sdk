@@ -19,9 +19,9 @@ class MetadataTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::metadataEndpoint) => Http::response(['value' => 'test'], 200, self::headers())]);
-            SIMP2SDK::createMetadata('test', 'test');
+            (new SIMP2SDK)->createMetadata('test', 'test');
             $this->assertTrue(true);
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }
@@ -30,7 +30,7 @@ class MetadataTest extends SDKTestCase
     public function ShouldRetrieveMetadata()
     {
         Http::fake([self::getApiUrl(SIMP2Endpoint::metadataEndpoint . "/*") => Http::response([0 => ['value' => 'test']], 200, self::headers())]);
-        $value = SIMP2SDK::getMetadata('test');
+        $value = (new SIMP2SDK)->getMetadata('test');
         $this->assertNotNull($value);
         $this->assertIsString($value, 'SIMP2SDK::getMetadata, the returned value must be an string.');
         $this->assertEquals('test', $value, 'SIMP2SDK::getMetadata does not return the expected value.');
@@ -40,7 +40,7 @@ class MetadataTest extends SDKTestCase
     public function ShouldReturnNullWhenNotFoundMetadata()
     {
         Http::fake([self::getApiUrl(SIMP2Endpoint::metadataEndpoint . "/*") => Http::response([], 404, self::headers())]);
-        $value = SIMP2SDK::getMetadata('test');
+        $value = (new SIMP2SDK)->getMetadata('test');
         $this->assertNull($value);
     }
 
@@ -49,6 +49,6 @@ class MetadataTest extends SDKTestCase
     {
         Http::fake([self::getApiUrl(SIMP2Endpoint::metadataEndpoint) => Http::response([], 500, self::headers())]);
         $this->expectException(CreateMetadataException::class);
-        SIMP2SDK::createMetadata('test', 'test');
+        (new SIMP2SDK)->createMetadata('test', 'test');
     }
 }

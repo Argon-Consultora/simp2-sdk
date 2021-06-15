@@ -20,7 +20,7 @@ class TestableSIMP2SDK extends SIMP2SDK
      */
     public static function testMakeRequest(string $endpoint, string $method, ?array $data = null): Response
     {
-        return self::makeRequest($endpoint, $method, $data);
+        return (new TestableSIMP2SDK)->makeRequest($endpoint, $method, $data);
     }
 
     public static function testShouldLog(LogLevel $logLevel, LogLevel $overwriteLogLevel): bool

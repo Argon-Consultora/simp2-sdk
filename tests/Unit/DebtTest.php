@@ -16,7 +16,7 @@ class DebtTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::debtEndpoint . '/123') => Http::response([], 404, self::headers())]);
-            $response = SIMP2SDK::getDebtInfo('123');
+            $response = (new SIMP2SDK)->getDebtInfo('123');
             $this->assertNull($response);
         } catch (Exception) {
             $this->assertTrue(false, 'Should not throw.');
@@ -28,7 +28,7 @@ class DebtTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::debtEndpoint . '/123') => Http::response($this->debtInfoBody(), 200, self::headers())]);
-            $response = SIMP2SDK::getDebtInfo('123');
+            $response = (new SIMP2SDK)->getDebtInfo('123');
             $this->assertEquals($this->expectedDebtInfoResponse(), $response);
         } catch (Exception $e) {
             $this->assertTrue(false, 'Should not throw.' . $e->getMessage());

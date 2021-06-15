@@ -21,8 +21,8 @@ class NotifyPaymentTest extends SDKTestCase
         Http::fake([self::getApiUrl(SIMP2Endpoint::notifyPaymentEndpoint) => Http::response([], 500, self::headers())]);
         $this->expectException(SavePaymentException::class);
         try {
-            SIMP2SDK::notifyPayment('123');
-        } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException $e) {
+            (new SIMP2SDK)->notifyPayment('123');
+        } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }
@@ -33,8 +33,8 @@ class NotifyPaymentTest extends SDKTestCase
         Http::fake([self::getApiUrl(SIMP2Endpoint::notifyPaymentEndpoint) => Http::response([], 422, self::headers())]);
         $this->expectException(SavePaymentException::class);
         try {
-            SIMP2SDK::notifyPayment('123');
-        } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException $e) {
+            (new SIMP2SDK)->notifyPayment('123');
+        } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }
@@ -45,8 +45,8 @@ class NotifyPaymentTest extends SDKTestCase
         Http::fake([self::getApiUrl(SIMP2Endpoint::notifyPaymentEndpoint) => Http::response([], 404, self::headers())]);
         $this->expectException(PaymentNotFoundException::class);
         try {
-            SIMP2SDK::notifyPayment('123');
-        } catch (SavePaymentException | PaymentAlreadyNotifiedException $e) {
+            (new SIMP2SDK)->notifyPayment('123');
+        } catch (SavePaymentException | PaymentAlreadyNotifiedException) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }

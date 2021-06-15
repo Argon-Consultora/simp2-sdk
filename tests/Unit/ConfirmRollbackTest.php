@@ -3,13 +3,12 @@
 namespace SIMP2\Tests\Unit;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
+use SIMP2\SDK\Enums\SIMP2Endpoint;
+use SIMP2\SDK\Exceptions\PaymentNotFoundException;
+use SIMP2\SDK\Exceptions\ReversePaymentException;
 use SIMP2\SDK\SIMP2SDK;
 use SIMP2\Tests\SDKTestCase;
-use SIMP2\SDK\Enums\SIMP2Endpoint;
-use Illuminate\Support\Facades\Http;
-use SIMP2\SDK\Exceptions\ReversePaymentException;
-use SIMP2\SDK\Exceptions\PaymentNotFoundException;
-
 
 class ConfirmRollbackTest extends SDKTestCase
 {
@@ -20,7 +19,7 @@ class ConfirmRollbackTest extends SDKTestCase
         Http::fake([self::getApiUrl(SIMP2Endpoint::confirmRollbackEndpoint) => Http::response([], 404, self::headers())]);
         try {
             $this->expectException(PaymentNotFoundException::class);
-            SIMP2SDK::confirmRollbackPayment('123');
+            (new SIMP2SDK)->confirmRollbackPayment('123');
         } catch (ReversePaymentException $e) {
             $this->assertTrue(false, 'Should not throw.' . $e->getMessage());
         }
@@ -31,9 +30,9 @@ class ConfirmRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::confirmRollbackEndpoint) => Http::response([], 200, self::headers())]);
-            $response = SIMP2SDK::confirmRollbackPayment('123');
+            $response = (new SIMP2SDK)->confirmRollbackPayment('123');
             $this->assertEquals(true, $response->successful());
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }
@@ -43,11 +42,11 @@ class ConfirmRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::confirmRollbackEndpoint) => Http::response([], 422, self::headers())]);
-            SIMP2SDK::confirmRollbackPayment('123');
+            (new SIMP2SDK)->confirmRollbackPayment('123');
             $this->assertTrue(false, 'Should throw.');
         } catch (ReversePaymentException $e) {
             $this->assertEquals('Invalid request body', $e->getMessage());
-        } catch (PaymentNotFoundException $e) {
+        } catch (PaymentNotFoundException) {
             $this->assertTrue(false, 'Should not throw this here.');
         }
     }
@@ -57,11 +56,11 @@ class ConfirmRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::confirmRollbackEndpoint) => Http::response([], 500, self::headers())]);
-            SIMP2SDK::confirmRollbackPayment('123');
+            (new SIMP2SDK)->confirmRollbackPayment('123');
             $this->assertTrue(false, 'Should throw.');
         } catch (ReversePaymentException $e) {
             $this->assertStringContainsString('Internal SIMP2 Error', $e->getMessage());
-        } catch (PaymentNotFoundException $e) {
+        } catch (PaymentNotFoundException) {
             $this->assertTrue(false, 'Should not throw this here.');
         }
     }

@@ -21,7 +21,7 @@ class NotifyRollbackTest extends SDKTestCase
         Http::fake([self::getApiUrl(SIMP2Endpoint::notifyRollbackEndpoint) => Http::response([], 404, self::headers())]);
         try {
             $this->expectException(PaymentNotFoundException::class);
-            SIMP2SDK::notifyRollbackPayment('123');
+            (new SIMP2SDK)->notifyRollbackPayment('123');
         } catch (ReversePaymentException $e) {
             $this->assertTrue(false, 'Should not throw.'. $e->getMessage());
         }
@@ -32,9 +32,9 @@ class NotifyRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::notifyRollbackEndpoint) => Http::response([], 200, self::headers())]);
-            $response = SIMP2SDK::notifyRollbackPayment('123');
+            $response = (new SIMP2SDK)->notifyRollbackPayment('123');
             $this->assertEquals(true, $response->successful());
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->assertTrue(false, 'Should not throw.');
         }
     }
@@ -44,11 +44,11 @@ class NotifyRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::notifyRollbackEndpoint) => Http::response([], 422, self::headers())]);
-            SIMP2SDK::notifyRollbackPayment('123');
+            (new SIMP2SDK)->notifyRollbackPayment('123');
             $this->assertTrue(false, 'Should throw.');
         } catch (ReversePaymentException $e) {
             $this->assertEquals('Invalid request body', $e->getMessage());
-        } catch (PaymentNotFoundException $e) {
+        } catch (PaymentNotFoundException) {
             $this->assertTrue(false, 'Should not throw this here.');
         }
     }
@@ -58,11 +58,11 @@ class NotifyRollbackTest extends SDKTestCase
     {
         try {
             Http::fake([self::getApiUrl(SIMP2Endpoint::notifyRollbackEndpoint) => Http::response([], 500, self::headers())]);
-            SIMP2SDK::notifyRollbackPayment('123');
+            (new SIMP2SDK)->notifyRollbackPayment('123');
             $this->assertTrue(false, 'Should throw.');
         } catch (ReversePaymentException $e) {
             $this->assertStringContainsString('Internal SIMP2 Error', $e->getMessage());
-        } catch (PaymentNotFoundException $e) {
+        } catch (PaymentNotFoundException) {
             $this->assertTrue(false, 'Should not throw this here.');
         }
     }

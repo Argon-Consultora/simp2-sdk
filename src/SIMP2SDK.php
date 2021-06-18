@@ -252,7 +252,7 @@ class SIMP2SDK
     /**
      * @throws CreateMetadataException
      */
-    public function createMetadata(string $key, string|array $value): void
+    public function createMetadata(string $key, mixed $value): void
     {
         try {
             $this->makeRequest(SIMP2Endpoint::metadataEndpoint, 'POST', ['key' => $key, 'value' => $value]);
@@ -262,11 +262,7 @@ class SIMP2SDK
         }
     }
 
-    /**
-     * @param string $key
-     * @return string|array|null
-     */
-    public function getMetadata(string $key): string|array|null
+    public function getMetadata(string $key): mixed
     {
         try {
             $res = $this->makeRequest(SIMP2Endpoint::metadataEndpoint . "/" . $key, 'GET');

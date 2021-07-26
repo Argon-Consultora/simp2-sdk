@@ -10,9 +10,6 @@ class Client
     private string $client_first_name;
     private string $client_last_name;
 
-    /**
-     * @return mixed
-     */
     public function getExtra(): mixed
     {
         return $this->extra;
@@ -24,26 +21,17 @@ class Client
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getClientFirstName(): string
     {
         return $this->client_first_name;
     }
 
-    /**
-     * @param string $client_first_name
-     */
     public function setClientFirstName(string $client_first_name): Client
     {
         $this->client_first_name = $client_first_name;
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getClientLastName(): string
     {
         return $this->client_last_name;

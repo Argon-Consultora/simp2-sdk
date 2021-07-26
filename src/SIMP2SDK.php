@@ -17,7 +17,6 @@ use SIMP2\SDK\Enums\HttpVerb;
 use SIMP2\SDK\Enums\LogLevel;
 use SIMP2\SDK\Enums\SIMP2Endpoint;
 use SIMP2\SDK\Enums\TypeDescription;
-use SIMP2\SDK\Exceptions\ClientNotFound;
 use SIMP2\SDK\Exceptions\CreateMetadataException;
 use SIMP2\SDK\Exceptions\PaymentAlreadyNotifiedException;
 use SIMP2\SDK\Exceptions\PaymentNotFoundException;
@@ -79,7 +78,7 @@ class SIMP2SDK
         }
     }
 
-    private static function fireEvent(
+    private function fireEvent(
         string $unique_reference,
         string $observations,
         ?string $category,
@@ -96,7 +95,7 @@ class SIMP2SDK
         ];
 
         try {
-            (new SIMP2SDK)->makeRequest((string)$endpoint, 'POST', $body);
+            $this->makeRequest((string)$endpoint, 'POST', $body);
         } catch (RequestException $e) {
             Log::critical('No se pudo procesar un evento.', ['error' => $e->getMessage()]);
         }
@@ -111,7 +110,7 @@ class SIMP2SDK
         int $overwriteLogLevel = null
     ) {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
+        (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
     }
 
     public static function errorEvent(
@@ -123,7 +122,7 @@ class SIMP2SDK
         int $overwriteLogLevel = null
     ) {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        self::fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
+        (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
     }
 
     /**
@@ -158,10 +157,6 @@ class SIMP2SDK
     }
 
     /**
-     * Confirms the payment
-     * @param string      $unique_reference
-     * @param string|null $date
-     * @return Response // Just for testing
      * @throws PaymentNotFoundException
      * @throws SavePaymentException
      */
@@ -190,9 +185,6 @@ class SIMP2SDK
     }
 
     /**
-     * @param string      $unique_reference
-     * @param string|null $date
-     * @return Response // Just for testing
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
@@ -272,6 +264,22 @@ class SIMP2SDK
         }
     }
 
+    /**
+     * @param $wildcard
+     * @return Debt[]
+     */
+    public function getDebts($wildcard): array
+    {
+        try {
+            $res = $this->makeRequest(SIMP2Endpoint::debtGeneralEndpoint . "/" . $wildcard, 'GET');
+            return array_map(function ($rawDebt) {
+                return $this->buildDebtFromResponse($rawDebt);
+            }, $res->json());
+        } catch (RequestException) {
+            return [];
+        }
+    }
+
     public function getDebtInfo($code): ?Debt
     {
         try {
@@ -280,28 +288,6 @@ class SIMP2SDK
             return self::buildDebtFromResponse($debtRaw);
         } catch (RequestException) {
             return null;
-        }
-    }
-
-    /**
-     * @param string $ccf_client_id
-     * @return Debt[]
-     * @throws ClientNotFound
-     * @throws SIMP2Exception
-     */
-    public function getDebtsOfClient(string $ccf_client_id): array
-    {
-        try {
-            $res = $this->makeRequest(SIMP2Endpoint::clientDataEndpoint($ccf_client_id), 'GET');
-            // Response to DTO
-            return array_map(function ($rawDebt) {
-                return $this->buildDebtFromResponse($rawDebt);
-            }, $res->json());
-        } catch (RequestException $e) {
-            if ($e->response->status() == HttpStatusCode::NotFound) {
-                return throw new ClientNotFound($e->getMessage());
-            }
-            return throw new SIMP2Exception($e->getMessage());
         }
     }
 

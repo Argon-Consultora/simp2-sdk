@@ -22,6 +22,7 @@ final class SIMP2Endpoint extends Enum
     const debtEndpoint = '/debt';
     const debtUniqueEndpoint = '/debt/unique/';
     const debtBarcodeEndpoint = '/debt/barcode/';
+    const debtGeneralEndpoint = '/debt/general/';
     const notifyRollbackEndpoint = '/reverse/notify';
     const confirmRollbackEndpoint = '/reverse/confirm';
     const notifyPaymentEndpoint = '/payments/notify';
@@ -31,7 +32,7 @@ final class SIMP2Endpoint extends Enum
     const metadataEndpoint = '/integrations/metadata';
     const clientDataEndpoint = '/client/{ccf_client_id}/debts';
 
-    public static function clientDataEndpoint($ccf_client_id)
+    public static function clientDataEndpoint($ccf_client_id): string
     {
         return str_replace('{ccf_client_id}', $ccf_client_id, self::clientDataEndpoint);
     }

@@ -79,11 +79,11 @@ class SIMP2SDK
     }
 
     private function fireEvent(
-        string $unique_reference,
-        string $observations,
-        ?string $category,
+        string          $unique_reference,
+        string          $observations,
+        ?string         $category,
         TypeDescription $type_description,
-        SIMP2Endpoint $endpoint
+        SIMP2Endpoint   $endpoint
     ) {
         $body = [
             "unique_reference" => $unique_reference,
@@ -102,24 +102,24 @@ class SIMP2SDK
     }
 
     public static function infoEvent(
-        string $unique_reference,
-        string $observations,
-        ?string $category,
+        string          $unique_reference,
+        string          $observations,
+        ?string         $category,
         TypeDescription $type_description,
-        LogLevel $logLevel,
-        int $overwriteLogLevel = null
+        LogLevel        $logLevel,
+        int             $overwriteLogLevel = null
     ) {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
         (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
     }
 
     public static function errorEvent(
-        string $unique_reference,
-        string $observations,
-        ?string $category,
+        string          $unique_reference,
+        string          $observations,
+        ?string         $category,
         TypeDescription $type_description,
-        LogLevel $logLevel,
-        int $overwriteLogLevel = null
+        LogLevel        $logLevel,
+        int             $overwriteLogLevel = null
     ) {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
         (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
@@ -273,7 +273,7 @@ class SIMP2SDK
     public function getDebts($wildcard): array
     {
         try {
-            $res = $this->makeRequest(SIMP2Endpoint::debtGeneralEndpoint . "/" . $wildcard, 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::debtGeneralEndpoint . $wildcard, 'GET');
             return array_map(function ($rawDebt) {
                 return $this->buildDebtFromResponse($rawDebt);
             }, $res->json());
@@ -356,7 +356,7 @@ class SIMP2SDK
             $subdebt->setAmount($rawSubDebt['amount']);
             $subdebt->setUniqueReference($rawSubDebt['unique_reference']);
             $subdebt->setDueDate($rawSubDebt['due_date']);
-            $subdebt->setTexts($rawSubDebt['texts'][0]);
+            $subdebt->setTexts($rawSubDebt['texts'][0] ?? ["Debt #{$rawSubDebt['unique_reference']}"]);
             $subdebt->setBarCode($rawSubDebt['barcode']);
             $subdebt->setExpired($rawSubDebt['expired']);
             $subdebt->setStatus($rawSubDebt['status']);

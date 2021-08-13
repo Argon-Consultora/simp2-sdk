@@ -267,6 +267,8 @@ class SIMP2SDK
     /**
      * @param $wildcard
      * @return Debt[]
+     * @throws PaymentNotFoundException
+     * @throws SIMP2Exception
      */
     public function getDebts($wildcard): array
     {
@@ -275,8 +277,14 @@ class SIMP2SDK
             return array_map(function ($rawDebt) {
                 return $this->buildDebtFromResponse($rawDebt);
             }, $res->json());
-        } catch (RequestException) {
-            return [];
+        } catch (RequestException $e) {
+            if ($e->response->status() == HttpStatusCode::NotFound) {
+                self::errorEvent($wildcard, 'Se busco una deuda inexistente (wildcard mode)', null, TypeDescription::DebtError(), LogLevel::Debug());
+                throw new PaymentNotFoundException();
+            }
+
+            self::errorEvent($wildcard, 'No se pudo obtener la deuda del simp2 via wildcard', null, TypeDescription::DebtError(), LogLevel::Info());
+            throw new SIMP2Exception($e->getMessage());
         }
     }
 

@@ -323,14 +323,15 @@ class SIMP2SDK
 
     /**
      * @param string $barcode
+     * @param bool   $internal
      * @return Debt
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception
      */
-    public function getSubdebtByBarcode(string $barcode): Debt
+    public function getSubdebtByBarcode(string $barcode, bool $internal = false): Debt
     {
         try {
-            $res = $this->makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET');
+            $res = $this->makeRequest(SIMP2Endpoint::debtBarcodeEndpoint . $barcode, 'GET', ['internal' => $internal]);
             return $this->buildDebtFromResponse($res->json()[0]);
         } catch (RequestException $e) {
             if (

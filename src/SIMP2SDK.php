@@ -130,7 +130,7 @@ class SIMP2SDK
      * @throws SavePaymentException
      * @throws PaymentAlreadyNotifiedException
      */
-    public function notifyPayment(string $unique_reference, string $date = null): void
+    public function notifyPayment(string $unique_reference, string $date = null, string $submethod = null): void
     {
         try {
             self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
@@ -139,6 +139,11 @@ class SIMP2SDK
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
+
+            if ($submethod) {
+                $body['submethod'] = $submethod;
+            }
+
             $this->makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
             $this->errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
@@ -188,13 +193,17 @@ class SIMP2SDK
      * @throws PaymentNotFoundException
      * @throws ReversePaymentException
      */
-    public function notifyRollbackPayment(string $unique_reference, string $date = null): Response
+    public function notifyRollbackPayment(string $unique_reference, string $date = null, string $submethod = null): Response
     {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
+
+            if ($submethod) {
+                $body['submethod'] = $submethod;
+            }
 
             self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
             return $this->makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);

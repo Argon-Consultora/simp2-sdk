@@ -27,6 +27,7 @@ use SIMP2\SDK\Exceptions\SIMP2Exception;
 class SIMP2SDK
 {
     private ?string $companyTransactionToken = null;
+    private ?string $forcePaymentMethodToken = null;
 
     /**
      * @throws RequestException
@@ -43,6 +44,10 @@ class SIMP2SDK
         ];
         if ($this->companyTransactionToken) {
             $headers['company-transaction-token'] = $this->companyTransactionToken;
+        }
+
+        if ($this->forcePaymentMethodToken) {
+            $headers['X-FORCE-PAYMENT-METHOD'] = $this->forcePaymentMethodToken;
         }
 
         $base = Http::withHeaders($headers);
@@ -63,6 +68,11 @@ class SIMP2SDK
     public function setCompanyTransactionToken(string $cct)
     {
         $this->companyTransactionToken = $cct;
+    }
+
+    public function setForcePaymentToken(string $token)
+    {
+        $this->forcePaymentMethodToken = $token;
     }
 
     protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool

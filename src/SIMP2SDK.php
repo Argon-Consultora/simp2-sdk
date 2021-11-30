@@ -141,7 +141,7 @@ class SIMP2SDK
      * @throws PaymentAlreadyNotifiedException
      */
     public function notifyPayment(
-        string $unique_reference,
+        string  $unique_reference,
         ?string $date = null,
         ?string $submethod = null,
         ?string $terminal = null,
@@ -194,20 +194,23 @@ class SIMP2SDK
      * @throws SavePaymentException
      */
     public function confirmPayment(
-        string $unique_reference,
+        string  $unique_reference,
         ?string $date = null,
         ?string $submethod = null,
         ?string $terminal = null,
         ?string $trx_code = null,
-        ?string $utility = null
+        ?string $utility = null,
+        ?string $amount = null,
     ): Response {
         try {
-            self::infoEvent($unique_reference, 'Se confirmó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
-
             $body = [
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
+
+            if ($amount) {
+                $body['amount'] = $amount;
+            }
 
             if ($submethod) {
                 $body['submethod'] = $submethod;
@@ -227,13 +230,10 @@ class SIMP2SDK
 
             return $this->makeRequest(SIMP2Endpoint::confirmPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            $this->errorEvent($unique_reference, 'No se pudo confirmar el pago al SIMP2', TypeDescription::SavePaymentError, TypeDescription::SavePaymentError(), LogLevel::Error());
-
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
             if ($e->response->status() == HttpStatusCode::UnprocessableEntity) {
-
                 throw new SavePaymentException('Invalid request body');
             }
             throw new SavePaymentException($e->getMessage());
@@ -245,7 +245,7 @@ class SIMP2SDK
      * @throws ReversePaymentException
      */
     public function notifyRollbackPayment(
-        string $unique_reference,
+        string  $unique_reference,
         ?string $date = null,
         ?string $submethod = null,
         ?string $terminal = null,
@@ -277,8 +277,6 @@ class SIMP2SDK
             self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
             return $this->makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            $this->errorEvent($unique_reference, 'No se pudo notificar la reversa al SIMP2', null, TypeDescription::RollbackError(), LogLevel::Critical());
-
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -294,19 +292,23 @@ class SIMP2SDK
      * @throws ReversePaymentException
      */
     public function confirmRollbackPayment(
-        string $unique_reference,
+        string  $unique_reference,
         ?string $date = null,
         ?string $submethod = null,
         ?string $terminal = null,
         ?string $trx_code = null,
-        ?string $utility = null
+        ?string $utility = null,
+        ?string $amount = null,
     ): Response {
         try {
-            self::infoEvent($unique_reference, 'Se confirmo una reversa', null, TypeDescription::RollbackConfirmation(), LogLevel::Info());
             $body = [
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
+
+            if ($amount) {
+                $body['amount'] = $amount;
+            }
 
             if ($submethod) {
                 $body['submethod'] = $submethod;
@@ -326,7 +328,6 @@ class SIMP2SDK
 
             return $this->makeRequest(SIMP2Endpoint::confirmRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            $this->errorEvent($unique_reference, 'No se pudo confirmar la reversa al SIMP2', "confirm_rollback_error", TypeDescription::RollbackError(), LogLevel::Critical());
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }

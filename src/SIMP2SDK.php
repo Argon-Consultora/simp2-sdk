@@ -22,6 +22,8 @@ use SIMP2\SDK\Exceptions\PaymentAlreadyNotifiedException;
 use SIMP2\SDK\Exceptions\PaymentNotFoundException;
 use SIMP2\SDK\Exceptions\ReversePaymentException;
 use SIMP2\SDK\Exceptions\SavePaymentException;
+use SIMP2\SDK\Exceptions\SecretKeyAlreadyExistsException;
+use SIMP2\SDK\Exceptions\SecretNotFoundException;
 use SIMP2\SDK\Exceptions\SIMP2Exception;
 
 class SIMP2SDK
@@ -78,7 +80,7 @@ class SIMP2SDK
     protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
     {
         try {
-            if (env('APP_ENV') === 'testing' && !$overwriteLogLevel) return false;
+            if (config('app.env') === 'testing' && !$overwriteLogLevel) return false;
             if (is_int($overwriteLogLevel)) $overwriteLogLevel = LogLevel::fromValue($overwriteLogLevel);
             $configuredLogLevel = $overwriteLogLevel ?? new LogLevel(env('SIMP2_LOG_LEVEL', LogLevel::Debug));
             return $logLevel->value >= $configuredLogLevel->value;
@@ -359,6 +361,43 @@ class SIMP2SDK
             return $res->object()[0]->value;
         } catch (RequestException) {
             return null;
+        }
+    }
+
+    /**
+     * @throws SIMP2Exception
+     * @throws SecretKeyAlreadyExistsException
+     */
+    public function createSecret(string $key, string $value): void
+    {
+        try {
+            $this->makeRequest(SIMP2Endpoint::secretEndpoint, 'POST', [
+                'key' => $key,
+                'value' => $value
+            ]);
+        } catch (RequestException $e) {
+            if ($e->response->status() === 409) {
+                throw new SecretKeyAlreadyExistsException();
+            }
+            Log::alert('No se pudo crear el secret', ['message' => $e->getMessage(), 'key' => $key]);
+            throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @throws SIMP2Exception
+     * @throws SecretNotFoundException
+     */
+    public function getSecret(string $key): string
+    {
+        try {
+            $res = $this->makeRequest(SIMP2Endpoint::secretEndpoint . "/" . $key, 'GET');
+            return $res->json('secret');
+        } catch (RequestException $e) {
+            if ($e->response->status() === 404) {
+                throw new SecretNotFoundException();
+            }
+            throw new SIMP2Exception($e->getMessage());
         }
     }
 

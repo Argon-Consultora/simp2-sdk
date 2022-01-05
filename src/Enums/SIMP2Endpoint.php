@@ -30,6 +30,7 @@ final class SIMP2Endpoint extends Enum
     const logInfoEndpoint = '/events/info';
     const logErrorEndpoint = '/events/error';
     const metadataEndpoint = '/integrations/metadata';
+    const secretEndpoint = '/integrations/secret';
     const clientDataEndpoint = '/client/{ccf_client_id}/debts';
 
     public static function clientDataEndpoint($ccf_client_id): string

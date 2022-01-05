@@ -148,7 +148,9 @@ class SIMP2SDK
         ?string $submethod = null,
         ?string $terminal = null,
         ?string $trx_code = null,
-        ?string $utility = null
+        ?string $utility = null,
+        ?string $last_four = null,
+        ?string $card_brand = null,
     ): void {
         try {
             self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
@@ -172,6 +174,14 @@ class SIMP2SDK
 
             if ($utility) {
                 $body['utility'] = $utility;
+            }
+
+            if ($last_four) {
+                $body['last_four'] = $last_four;
+            }
+
+            if ($card_brand) {
+                $body['card_brand'] = $card_brand;
             }
 
             $this->makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
@@ -203,6 +213,8 @@ class SIMP2SDK
         ?string $trx_code = null,
         ?string $utility = null,
         ?string $amount = null,
+        ?string $last_four = null,
+        ?string $card_brand = null,
     ): Response {
         try {
             $body = [
@@ -230,6 +242,14 @@ class SIMP2SDK
                 $body['utility'] = $utility;
             }
 
+            if ($last_four) {
+                $body['last_four'] = $last_four;
+            }
+
+            if ($card_brand) {
+                $body['card_brand'] = $card_brand;
+            }
+
             return $this->makeRequest(SIMP2Endpoint::confirmPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
@@ -252,7 +272,9 @@ class SIMP2SDK
         ?string $submethod = null,
         ?string $terminal = null,
         ?string $trx_code = null,
-        ?string $utility = null
+        ?string $utility = null,
+        ?string $last_four = null,
+        ?string $card_brand = null,
     ): Response {
         try {
             $body = [
@@ -274,6 +296,14 @@ class SIMP2SDK
 
             if ($utility) {
                 $body['utility'] = $utility;
+            }
+
+            if ($last_four) {
+                $body['last_four'] = $last_four;
+            }
+
+            if ($card_brand) {
+                $body['card_brand'] = $card_brand;
             }
 
             self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
@@ -301,6 +331,8 @@ class SIMP2SDK
         ?string $trx_code = null,
         ?string $utility = null,
         ?string $amount = null,
+        ?string $last_four = null,
+        ?string $card_brand = null,
     ): Response {
         try {
             $body = [
@@ -326,6 +358,14 @@ class SIMP2SDK
 
             if ($utility) {
                 $body['utility'] = $utility;
+            }
+
+            if ($last_four) {
+                $body['last_four'] = $last_four;
+            }
+
+            if ($card_brand) {
+                $body['card_brand'] = $card_brand;
             }
 
             return $this->makeRequest(SIMP2Endpoint::confirmRollbackEndpoint, 'POST', $body);

@@ -20,6 +20,7 @@ final class SIMP2Endpoint extends Enum
 {
     // SIMP2 Endpoints
     const debtEndpoint = '/debt';
+    const debtOrphanEndpoint = '/debt/orphan';
     const debtUniqueEndpoint = '/debt/unique/';
     const debtBarcodeEndpoint = '/debt/barcode/';
     const debtGeneralEndpoint = '/debt/general/';

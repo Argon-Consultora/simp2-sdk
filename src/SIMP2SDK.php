@@ -18,6 +18,7 @@ use SIMP2\SDK\Enums\LogLevel;
 use SIMP2\SDK\Enums\SIMP2Endpoint;
 use SIMP2\SDK\Enums\TypeDescription;
 use SIMP2\SDK\Exceptions\CreateMetadataException;
+use SIMP2\SDK\Exceptions\OrphanDebtsAreNotEnabled;
 use SIMP2\SDK\Exceptions\PaymentAlreadyNotifiedException;
 use SIMP2\SDK\Exceptions\PaymentNotFoundException;
 use SIMP2\SDK\Exceptions\ReversePaymentException;
@@ -38,7 +39,8 @@ class SIMP2SDK
         string $endpoint,
         string $method,
         ?array $data = null
-    ): Response {
+    ): Response
+    {
         $headers = [
             'X-API-KEY' => config('simp2.api_key'),
             'Accept' => 'application/json',
@@ -96,7 +98,8 @@ class SIMP2SDK
         ?string         $category,
         TypeDescription $type_description,
         SIMP2Endpoint   $endpoint
-    ) {
+    )
+    {
         $body = [
             "unique_reference" => $unique_reference,
             "integration" => "conector_pagofacil",
@@ -120,7 +123,8 @@ class SIMP2SDK
         TypeDescription $type_description,
         LogLevel        $logLevel,
         int             $overwriteLogLevel = null
-    ) {
+    )
+    {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
         (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
     }
@@ -132,7 +136,8 @@ class SIMP2SDK
         TypeDescription $type_description,
         LogLevel        $logLevel,
         int             $overwriteLogLevel = null
-    ) {
+    )
+    {
         if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
         (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
     }
@@ -151,7 +156,8 @@ class SIMP2SDK
         ?string $utility = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): void {
+    ): void
+    {
         try {
             self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
 
@@ -215,7 +221,8 @@ class SIMP2SDK
         ?string $amount = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response {
+    ): Response
+    {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -275,7 +282,8 @@ class SIMP2SDK
         ?string $utility = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response {
+    ): Response
+    {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -333,7 +341,8 @@ class SIMP2SDK
         ?string $amount = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response {
+    ): Response
+    {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -465,6 +474,20 @@ class SIMP2SDK
         }
     }
 
+    /**
+     * @throws OrphanDebtsAreNotEnabled
+     * @throws SIMP2Exception
+     */
+    public function createOrphanDebt(array $data): void
+    {
+        try {
+            $res = $this->makeRequest(SIMP2Endpoint::debtOrphanEndpoint, 'POST', $data);
+            if ($res->status() === 204) throw new OrphanDebtsAreNotEnabled();
+        } catch (RequestException $e) {
+            throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
     public function getDebtInfo($code): ?Debt
     {
         try {
@@ -500,7 +523,7 @@ class SIMP2SDK
 
     /**
      * @param string $barcode
-     * @param bool   $internal
+     * @param bool $internal
      * @return Debt
      * @throws PaymentNotFoundException
      * @throws SIMP2Exception

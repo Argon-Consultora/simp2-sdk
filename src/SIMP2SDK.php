@@ -2,7 +2,6 @@
 
 namespace SIMP2\SDK;
 
-use BenSampo\Enum\Exceptions\InvalidEnumMemberException;
 use Carbon\Carbon;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
@@ -14,9 +13,7 @@ use SIMP2\SDK\DTO\Debt;
 use SIMP2\SDK\DTO\SubDebt;
 use SIMP2\SDK\Enums\HttpStatusCode;
 use SIMP2\SDK\Enums\HttpVerb;
-use SIMP2\SDK\Enums\LogLevel;
 use SIMP2\SDK\Enums\SIMP2Endpoint;
-use SIMP2\SDK\Enums\TypeDescription;
 use SIMP2\SDK\Exceptions\CreateMetadataException;
 use SIMP2\SDK\Exceptions\OrphanDebtsAreNotEnabled;
 use SIMP2\SDK\Exceptions\PaymentAlreadyNotifiedException;
@@ -69,77 +66,14 @@ class SIMP2SDK
         return $response;
     }
 
-    public function setCompanyTransactionToken(string $cct)
+    public function setCompanyTransactionToken(string $cct): void
     {
         $this->companyTransactionToken = $cct;
     }
 
-    public function setForcePaymentToken(string $token)
+    public function setForcePaymentToken(string $token): void
     {
         $this->forcePaymentMethodToken = $token;
-    }
-
-    protected static function shouldLog(LogLevel $logLevel, $overwriteLogLevel = null): bool
-    {
-        try {
-            if (config('app.env') === 'testing' && !$overwriteLogLevel) return false;
-            if (is_int($overwriteLogLevel)) $overwriteLogLevel = LogLevel::fromValue($overwriteLogLevel);
-            $configuredLogLevel = $overwriteLogLevel ?? new LogLevel(env('SIMP2_LOG_LEVEL', LogLevel::Debug));
-            return $logLevel->value >= $configuredLogLevel->value;
-        } catch (InvalidEnumMemberException) {
-            // Defaults to debug in case of misconfiguration.
-            return $logLevel->value >= LogLevel::Debug;
-        }
-    }
-
-    private function fireEvent(
-        string          $unique_reference,
-        string          $observations,
-        ?string         $category,
-        TypeDescription $type_description,
-        SIMP2Endpoint   $endpoint
-    )
-    {
-        $body = [
-            "unique_reference" => $unique_reference,
-            "integration" => "conector_pagofacil",
-            "type_description" => $type_description,
-            "event_date" => Carbon::now()->toDateTimeString(),
-            "category" => $category,
-            "observations" => $observations
-        ];
-
-        try {
-            $this->makeRequest((string)$endpoint, 'POST', $body);
-        } catch (RequestException $e) {
-            Log::critical('No se pudo procesar un evento.', ['error' => $e->getMessage()]);
-        }
-    }
-
-    public static function infoEvent(
-        string          $unique_reference,
-        string          $observations,
-        ?string         $category,
-        TypeDescription $type_description,
-        LogLevel        $logLevel,
-        int             $overwriteLogLevel = null
-    )
-    {
-        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logInfoEndpoint());
-    }
-
-    public static function errorEvent(
-        string          $unique_reference,
-        string          $observations,
-        ?string         $category,
-        TypeDescription $type_description,
-        LogLevel        $logLevel,
-        int             $overwriteLogLevel = null
-    )
-    {
-        if (!self::shouldLog($logLevel, $overwriteLogLevel)) return;
-        (new SIMP2SDK)->fireEvent($unique_reference, $observations, $category, $type_description, SIMP2Endpoint::logErrorEndpoint());
     }
 
     /**
@@ -159,8 +93,6 @@ class SIMP2SDK
     ): void
     {
         try {
-            self::infoEvent($unique_reference, 'Se notificó un pago', null, TypeDescription::PaymentConfirmation(), LogLevel::Info());
-
             $body = [
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
@@ -192,7 +124,6 @@ class SIMP2SDK
 
             $this->makeRequest(SIMP2Endpoint::notifyPaymentEndpoint, 'POST', $body);
         } catch (RequestException $e) {
-            $this->errorEvent($unique_reference, 'No se pudo notificar el pago al SIMP2 - ' . $e->response->status(), null, TypeDescription::PaymentConfirmationError(), LogLevel::Error());
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
@@ -314,7 +245,6 @@ class SIMP2SDK
                 $body['card_brand'] = $card_brand;
             }
 
-            self::infoEvent($unique_reference, 'Se notificó la reversa', null, TypeDescription::RollbackNotification(), LogLevel::Info());
             return $this->makeRequest(SIMP2Endpoint::notifyRollbackEndpoint, 'POST', $body);
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
@@ -465,11 +395,8 @@ class SIMP2SDK
             }, $res->json());
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
-                self::errorEvent($wildcard, 'Se busco una deuda inexistente (wildcard mode)', null, TypeDescription::DebtError(), LogLevel::Debug());
                 throw new PaymentNotFoundException();
             }
-
-            self::errorEvent($wildcard, 'No se pudo obtener la deuda del simp2 via wildcard', null, TypeDescription::DebtError(), LogLevel::Info());
             throw new SIMP2Exception($e->getMessage());
         }
     }
@@ -512,11 +439,8 @@ class SIMP2SDK
             return self::buildDebtFromResponse($res->json()[0]);
         } catch (RequestException $e) {
             if ($e->response->status() == HttpStatusCode::NotFound) {
-                self::errorEvent($unique_reference, 'Se busco una deuda inexistente', null, TypeDescription::DebtError(), LogLevel::Debug());
                 throw new PaymentNotFoundException();
             }
-
-            self::errorEvent($unique_reference, 'No se pudo obtener la sub deuda del simp2', null, TypeDescription::DebtError(), LogLevel::Info());
             throw new SIMP2Exception($e->getMessage());
         }
     }

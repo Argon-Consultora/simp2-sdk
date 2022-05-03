@@ -11,7 +11,7 @@ class SIMP2ServiceProvider extends BaseServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom($this->configPath(), 'simp2');
     }

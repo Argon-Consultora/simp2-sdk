@@ -479,6 +479,7 @@ class SIMP2SDK
         $subdebts = array_map(function ($rawSubDebt) {
             $subdebt = new SubDebt();
             $subdebt->setAmount($rawSubDebt['amount']);
+            $subdebt->setCurrency($rawSubDebt['currency'] ?? "ARS");
             $subdebt->setUniqueReference($rawSubDebt['unique_reference']);
             $subdebt->setDueDate($rawSubDebt['due_date']);
             $subdebt->setTexts($rawSubDebt['texts'][0] ?? ["Debt #{$rawSubDebt['unique_reference']}"]);

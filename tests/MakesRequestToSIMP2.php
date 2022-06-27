@@ -91,6 +91,7 @@ trait MakesRequestToSIMP2
         $subdebt->setTexts(['test']);
         $subdebt->setBarCode('7777000000000000000000000000000000000000');
         $subdebt->setExpired(false);
+        $subdebt->setCurrency("ARS");
         $subdebt->setStatus(DebtStatus::PendingPayment);
         $debt->setSubdebts([$subdebt]);
 
@@ -119,6 +120,7 @@ trait MakesRequestToSIMP2
         $subdebt->setTexts(['test']);
         $subdebt->setBarCode('7777000012000000000000000000230002057353');
         $subdebt->setExpired(false);
+        $subdebt->setCurrency("ARS");
         $subdebt->setStatus(DebtStatus::PendingPayment);
 
         return [$subdebt];

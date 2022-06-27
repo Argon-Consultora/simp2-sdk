@@ -9,6 +9,7 @@ class SubDebt
 {
     private string $unique_reference;
     private float $amount;
+    private string $currency;
     private string $due_date;
     private array $texts;
     private string $barcode;
@@ -38,6 +39,16 @@ class SubDebt
     public function getAmount(): float
     {
         return $this->amount;
+    }
+
+    public function setCurrency(string $currency): void
+    {
+        $this->currency = $currency;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
     }
 
     public function setAmount(float $amount): void

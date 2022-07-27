@@ -23,7 +23,7 @@ class NotifyPaymentTest extends SDKTestCase
         try {
             (new SIMP2SDK)->notifyPayment('123');
         } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException) {
-            $this->assertTrue(false, 'Should not throw.');
+            $this->fail('Should not throw.');
         }
     }
 
@@ -35,7 +35,7 @@ class NotifyPaymentTest extends SDKTestCase
         try {
             (new SIMP2SDK)->notifyPayment('123');
         } catch (PaymentNotFoundException | PaymentAlreadyNotifiedException) {
-            $this->assertTrue(false, 'Should not throw.');
+            $this->fail('Should not throw.');
         }
     }
 
@@ -47,7 +47,7 @@ class NotifyPaymentTest extends SDKTestCase
         try {
             (new SIMP2SDK)->notifyPayment('123');
         } catch (SavePaymentException | PaymentAlreadyNotifiedException) {
-            $this->assertTrue(false, 'Should not throw.');
+            $this->fail('Should not throw.');
         }
     }
 

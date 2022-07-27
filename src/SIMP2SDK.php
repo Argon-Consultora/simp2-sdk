@@ -90,6 +90,7 @@ class SIMP2SDK
         ?string $utility = null,
         ?string $last_four = null,
         ?string $card_brand = null,
+        ?float $amount = null,
     ): void
     {
         try {
@@ -97,6 +98,10 @@ class SIMP2SDK
                 'unique_reference' => $unique_reference,
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
+
+            if($amount) {
+                $body['amount'] = $amount;
+            }
 
             if ($submethod) {
                 $body['submethod'] = $submethod;

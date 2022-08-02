@@ -28,6 +28,7 @@ final class SIMP2Endpoint extends Enum
     const confirmRollbackEndpoint = '/reverse/confirm';
     const notifyPaymentEndpoint = '/payments/notify';
     const confirmPaymentEndpoint = '/payments/confirm';
+    const lastDayPaymentsEndpoint = '/payments/last_24_hours';
     const logInfoEndpoint = '/events/info';
     const logErrorEndpoint = '/events/error';
     const metadataEndpoint = '/integrations/metadata';

@@ -90,7 +90,7 @@ class SIMP2SDK
         ?string $utility = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-        ?float $amount = null,
+        ?float  $amount = null,
     ): void
     {
         try {
@@ -99,7 +99,7 @@ class SIMP2SDK
                 'date' => $date ?? Carbon::now()->toDateTimeString()
             ];
 
-            if($amount) {
+            if ($amount) {
                 $body['amount'] = $amount;
             }
 
@@ -446,6 +446,22 @@ class SIMP2SDK
             if ($e->response->status() == HttpStatusCode::NotFound) {
                 throw new PaymentNotFoundException();
             }
+            throw new SIMP2Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param string $date
+     * @param int $page
+     * @return Debt
+     * @throws SIMP2Exception
+     */
+    public function getPaymentsCreatedInTheLast24Hours(string $date, int $page = 1): Debt
+    {
+        try {
+            $res = $this->makeRequest(SIMP2Endpoint::lastDayPaymentsEndpoint . "?page=$page", 'GET', ['date' => $date]);
+            return $res->json();
+        } catch (RequestException $e) {
             throw new SIMP2Exception($e->getMessage());
         }
     }

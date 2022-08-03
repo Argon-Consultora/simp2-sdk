@@ -453,10 +453,10 @@ class SIMP2SDK
     /**
      * @param string $date
      * @param int $page
-     * @return Debt
+     * @return array
      * @throws SIMP2Exception
      */
-    public function getPaymentsCreatedInTheLast24Hours(string $date, int $page = 1): Debt
+    public function getPaymentsCreatedInTheLast24Hours(string $date, int $page = 1): array
     {
         try {
             $res = $this->makeRequest(SIMP2Endpoint::lastDayPaymentsEndpoint . "?page=$page", 'GET', ['date' => $date]);

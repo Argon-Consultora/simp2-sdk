@@ -459,7 +459,7 @@ class SIMP2SDK
     public function getPaymentsCreatedInTheLast24Hours(string $date, int $page = 1): array
     {
         try {
-            $res = $this->makeRequest(SIMP2Endpoint::lastDayPaymentsEndpoint . "?page=$page", 'GET', ['date' => $date]);
+            $res = $this->makeRequest(SIMP2Endpoint::lastDayPaymentsEndpoint, 'GET', ['date' => $date, 'page' => $page]);
             return $res->json();
         } catch (RequestException $e) {
             throw new SIMP2Exception($e->getMessage());
@@ -486,6 +486,22 @@ class SIMP2SDK
             }
             throw new SIMP2Exception($e->getMessage());
         }
+    }
+
+    /**
+     * @param Debt $debt
+     * @param string $barcode
+     * @return SubDebt
+     * @throws SIMP2Exception
+     */
+    public function getSubdebtWithDebtAndBarcode($debt, $barcode): SubDebt
+    {
+        foreach ($debt->getSubdebts() as $subdebt) {
+            if ($subdebt->getBarcode() == $barcode) {
+                return $subdebt;
+            }
+        }
+        throw new SIMP2Exception("Deuda inexistente");
     }
 
     private static function buildDebtFromResponse(array $response): Debt

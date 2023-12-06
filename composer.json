@@ -3,24 +3,18 @@
     "description": "SDK para comunicarse con el simp2 desde un conector",
     "license": "proprietary",
     "require": {
-        "php": "^8.0",
-        "laravel/framework": "^8.12",
-        "bensampo/laravel-enum": "^3.3",
+        "php": "^8.1",
+        "laravel/framework": "^10.10",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "^6.5.8"
+        "guzzlehttp/guzzle": "^7.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "orchestra/testbench": "^6.17"
+        "phpunit/phpunit": "^10.0"
     },
     "authors": [
         {
             "name": "ArgonConsultora",
             "homepage": "https://argonconsultora.com.ar"
-        },
-        {
-            "name": "Nicolás Migueles",
-            "email": "me@nmigueles.dev"
         }
     ],
     "autoload": {
@@ -45,7 +39,7 @@
             "php artisan vendor:publish --provider=\"SIMP2\\SDK\\SIMP2ServiceProvider\""
         ],
         "post-autoload-dump": [
-            "@php ./vendor/bin/testbench package:discover --ansi"
+
         ]
     }
 }

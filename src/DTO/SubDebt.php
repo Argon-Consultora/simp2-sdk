@@ -2,7 +2,6 @@
 
 namespace SIMP2\SDK\DTO;
 
-use JetBrains\PhpStorm\Pure;
 use SIMP2\SDK\Enums\DebtStatus;
 
 class SubDebt
@@ -76,7 +75,7 @@ class SubDebt
         $this->texts = $texts;
     }
 
-    #[Pure] public function getTextoTicket(): string
+    public function getTextoTicket(): string
     {
         return $this->getTexts()[0];
     }
@@ -96,7 +95,7 @@ class SubDebt
         return $this->expired;
     }
 
-    #[Pure] public function isNotPaid(): bool
+    public function isNotPaid(): bool
     {
         return $this->status == DebtStatus::PendingPayment || $this->hasBeenRolledBack();
     }

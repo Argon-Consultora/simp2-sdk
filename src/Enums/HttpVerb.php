@@ -2,9 +2,7 @@
 
 namespace SIMP2\SDK\Enums;
 
-use BenSampo\Enum\Enum;
-
-final class HttpVerb extends Enum
+enum HttpVerb: string
 {
     const POST = 'POST';
     const GET = 'GET';

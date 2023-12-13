@@ -2,9 +2,7 @@
 
 namespace SIMP2\SDK\Enums;
 
-use BenSampo\Enum\Enum;
-
-final class DebtStatus extends Enum
+enum DebtStatus: string
 {
     const PendingPayment = 'pending_payment';
     const RollbackNotified = 'rollback_notified';

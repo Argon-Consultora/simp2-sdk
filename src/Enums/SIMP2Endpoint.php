@@ -2,8 +2,6 @@
 
 namespace SIMP2\SDK\Enums;
 
-use BenSampo\Enum\Enum;
-
 /**
  * @method static static debtEndpoint()
  * @method static static debtUniqueEndpoint()
@@ -16,7 +14,7 @@ use BenSampo\Enum\Enum;
  * @method static static logErrorEndpoint()
  * @method static static metadataEndpoint()
  */
-final class SIMP2Endpoint extends Enum
+enum SIMP2Endpoint: string
 {
     // SIMP2 Endpoints
     const debtEndpoint = '/debt';

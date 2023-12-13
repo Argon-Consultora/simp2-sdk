@@ -2,8 +2,6 @@
 
 namespace SIMP2\SDK\DTO;
 
-use JetBrains\PhpStorm\Pure;
-
 class Debt
 {
     private string $code;
@@ -85,7 +83,7 @@ class Debt
         $this->subdebts = $subdebts;
     }
 
-    #[Pure] public function getSubdebt(?string $reference = null): ?SubDebt
+    public function getSubdebt(?string $reference = null): ?SubDebt
     {
         if (!$reference && count($this->subdebts) == 1) {
             // If not reference is provided and there's only one subdebt, return it.
@@ -101,7 +99,7 @@ class Debt
         return null;
     }
 
-    #[Pure] public function isFromClient(string $client_id): bool
+    public function isFromClient(string $client_id): bool
     {
         return $this->getClientId() === $client_id;
     }

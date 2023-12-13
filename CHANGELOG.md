@@ -1,5 +1,17 @@
 # Changelog
 
+### 5.0.2
+> 12/12/2023
+
+* Se migró a la versión PHP ^8.1.
+* Se quita la librería `bensampo/laravel-enum` porque la nueva versión de PHP soporta enumeraciones de manera nativa.
+* Se quitan anotaciones propietarias del IDE PHPStorm de Jetbrains.
+
+### 5.0.0
+> 06/12/2023
+
+* Se migró a la versión PHP ^8.1
+
 ### 2.0.0
 > 15/06/2021 
 

@@ -7,6 +7,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use SIMP2\SDK\DTO\Client;
 use SIMP2\SDK\DTO\Debt;
@@ -36,12 +37,12 @@ class SIMP2SDK
         string $endpoint,
         string $method,
         ?array $data = null
-    ): Response
-    {
+    ): Response {
         $headers = [
             'X-API-KEY' => config('simp2.api_key'),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
+            'x-simp2-trace-id' => Str::uuid(),
         ];
         if ($this->companyTransactionToken) {
             $headers['company-transaction-token'] = $this->companyTransactionToken;
@@ -91,8 +92,7 @@ class SIMP2SDK
         ?string $last_four = null,
         ?string $card_brand = null,
         ?float  $amount = null,
-    ): void
-    {
+    ): void {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -157,8 +157,7 @@ class SIMP2SDK
         ?string $amount = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response
-    {
+    ): Response {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -218,8 +217,7 @@ class SIMP2SDK
         ?string $utility = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response
-    {
+    ): Response {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -276,8 +274,7 @@ class SIMP2SDK
         ?string $amount = null,
         ?string $last_four = null,
         ?string $card_brand = null,
-    ): Response
-    {
+    ): Response {
         try {
             $body = [
                 'unique_reference' => $unique_reference,
@@ -481,7 +478,8 @@ class SIMP2SDK
         } catch (RequestException $e) {
             if (
                 $e->response->status() == HttpStatusCode::NotFound ||
-                $e->response->status() == HttpStatusCode::Conflict) {
+                $e->response->status() == HttpStatusCode::Conflict
+            ) {
                 throw new PaymentNotFoundException();
             }
             throw new SIMP2Exception($e->getMessage());

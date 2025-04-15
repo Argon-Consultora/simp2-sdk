@@ -33,16 +33,15 @@ class SIMP2SDK
     /**
      * @throws RequestException
      */
-    protected function makeRequest(
-        string $endpoint,
-        string $method,
-        ?array $data = null
-    ): Response {
+    protected function makeRequest(string $endpoint, string $method, ?array $data = null): Response
+    {
+        $trace_id = Str::uuid()->toString();
+
         $headers = [
             'X-API-KEY' => config('simp2.api_key'),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'x-simp2-trace-id' => Str::uuid()->toString(),
+            'x-simp2-trace-id' => $trace_id,
         ];
         if ($this->companyTransactionToken) {
             $headers['company-transaction-token'] = $this->companyTransactionToken;
@@ -62,7 +61,9 @@ class SIMP2SDK
             default => throw new InvalidArgumentException('The http verb in makeRequest is invalid.'),
         };
 
-        $response->throw();
+        $response
+            ->throw()
+            ->header('x-simp2-trace-id', $trace_id);
 
         return $response;
     }

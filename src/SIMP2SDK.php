@@ -42,7 +42,7 @@ class SIMP2SDK
             'X-API-KEY' => config('simp2.api_key'),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'x-simp2-trace-id' => Str::uuid(),
+            'x-simp2-trace-id' => Str::uuid()->toString(),
         ];
         if ($this->companyTransactionToken) {
             $headers['company-transaction-token'] = $this->companyTransactionToken;
